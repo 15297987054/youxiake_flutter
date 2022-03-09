@@ -39,19 +39,26 @@ class NavWidget extends StatelessWidget {
             shrinkWrap: true,
             childAspectRatio: 1,
             crossAxisCount: _navList.length,
-            children: _getNavWidget(),
+            children: _getNavWidget(context),
           ),
         );
   }
 
-  List<Widget> _getNavWidget() {
+  List<Widget> _getNavWidget(BuildContext context) {
     return _navList.map((item) {
-      return Column(
-        children: [
-          Image.network(item['url'], width: Util.sw(44), height: Util.sw(44)),
-          Text(item['label'],
-              style: TextStyle(color: Util.hexColor(0x333333), fontSize: 12)),
-        ],
+      return InkWell(
+              child: Column(
+          children: [
+            Image.network(item['url'], width: Util.sw(44), height: Util.sw(44)),
+            Text(item['label'],
+                style: TextStyle(color: Util.hexColor(0x333333), fontSize: 12)),
+          ],
+        ),
+        onTap: (){
+          Navigator.pushNamed(context, '/round',arguments: {
+            'title':item['label']
+          });
+        },
       );
     }).toList();
   }

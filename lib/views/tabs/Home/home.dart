@@ -4,8 +4,12 @@ import 'package:youxiake_project/components/ads.dart';
 import 'package:youxiake_project/api/homeServer.dart';
 import 'package:youxiake_project/utils/index.dart';
 import 'package:card_swiper/card_swiper.dart';
+import 'package:youxiake_project/views/tabs/Home/components/destination.dart';
 import 'package:youxiake_project/views/tabs/Home/components/nav.dart';
+import 'package:youxiake_project/views/tabs/Home/components/recommend2.dart';
 
+import 'components/goodsList.dart';
+import 'components/recommend.dart';
 import 'components/tabs.dart';
 
 class HomePage extends StatefulWidget {
@@ -13,11 +17,16 @@ class HomePage extends StatefulWidget {
   _HomePageState createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
-  final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
+class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin{
+  
+  @override
+  // TODO: implement wantKeepAlive
+  bool get wantKeepAlive => true;
+final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
   var _list = {}; // 首页数据
   var _cityList = {}; // 城市数据
   List _imageList = []; // 轮播图列表
+  List _goodsList = [];// 商品数据列表
   Map _location = {
     'uid': '',
     'site_name': '',
@@ -31,6 +40,7 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     this._getData();
     this._getCityList();
+    this._getGoodsList();
   }
 
   // 获取首页数据
@@ -61,7 +71,18 @@ class _HomePageState extends State<HomePage> {
       };
     });
   }
-
+  // 获取商品列表数据
+  Future<void> _getGoodsList({type,page}) async {
+    var goodsList = await homeApi.getGoodsList({
+      'sitecode': _location['sitecode'],
+      'city_id': _location['sitecode'],
+      'type': type!=null?type:1,
+      'page': page!=null?page:1
+    });
+    this.setState(() {
+      _goodsList = goodsList.data['data']['list'];
+    });
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -101,33 +122,40 @@ class _HomePageState extends State<HomePage> {
                                     onTap: () =>
                                         _scaffoldKey.currentState?.openDrawer(),
                                   ),
-                                  Container(
-                                    width: Util.sw(297),
-                                    height: Util.sw(29),
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(20),
-                                      color: Colors.white,
+                                  InkWell(
+                                                                      child: Container(
+                                      width: Util.sw(297),
+                                      height: Util.sw(29),
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(20),
+                                        color: Colors.white,
+                                      ),
+                                      child: Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.center,
+                                        children: [
+                                          SizedBox(width: Util.sw(10)),
+                                          Image.network(
+                                              'https://m.youxiake.com/img/index_banner_search.6acb2d36.png?t=6acb2d3607ec7636d10bbd0f217bd3fa',
+                                              width: Util.sw(13),
+                                              height: Util.sw(13),
+                                              color: Util.hexColor(0x9999999)),
+                                          SizedBox(width: Util.sw(10)),
+                                          Text(
+                                              _list['defaultSearch'] != null
+                                                  ? _list['defaultSearch']
+                                                      ['title']
+                                                  : '',
+                                              style: TextStyle(
+                                                  color: Util.hexColor(0x999999)))
+                                        ],
+                                      ),
                                     ),
-                                    child: Row(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.center,
-                                      children: [
-                                        SizedBox(width: Util.sw(10)),
-                                        Image.network(
-                                            'https://m.youxiake.com/img/index_banner_search.6acb2d36.png?t=6acb2d3607ec7636d10bbd0f217bd3fa',
-                                            width: Util.sw(13),
-                                            height: Util.sw(13),
-                                            color: Util.hexColor(0x9999999)),
-                                        SizedBox(width: Util.sw(10)),
-                                        Text(
-                                            _list['defaultSearch'] != null
-                                                ? _list['defaultSearch']
-                                                    ['title']
-                                                : '',
-                                            style: TextStyle(
-                                                color: Util.hexColor(0x999999)))
-                                      ],
-                                    ),
+                                    onTap: (){
+                                      Navigator.pushNamed(context, '/search',arguments: {
+                                      'placeholder':_list['defaultSearch']['title']
+                                    });
+                                    },  
                                   ),
                                 ],
                               ),
@@ -195,6 +223,22 @@ class _HomePageState extends State<HomePage> {
                 SizedBox(height:10),
                 // tab切换组件
                 TabsWidget(data: _list['aroundLump']!=null?_list['aroundLump']:{}),
+                SizedBox(height:10),
+                // 中部推荐组件
+                _list['saleProductList']!=null?RecommendWidget(
+                  saleProduct:_list['saleProductList'][0],
+                  newProduct:_list['newProduct']['recommend'],
+                  kingProduct:_list['kingProduct']['recommend'],
+                  activityBanner:_list['activityBanner']):SizedBox(),
+                  SizedBox(height:10),
+                  Recommend2(data:_list['minority']!=null?_list['minority']:{}),
+                  SizedBox(height:10),
+                  Destination(data:_list['destination']!=null?_list['destination']:{}),
+                  SizedBox(height: 10,),
+                  GoodsList(
+                    data:_list['flowTabList']!=null?_list['flowTabList']:[],
+                    goodsList:_goodsList,
+                    getData:(param)=>_getGoodsList(type:param['type'],page:param['page'])),
               ],
             ),
           ),
@@ -207,17 +251,24 @@ class _HomePageState extends State<HomePage> {
     var arr = _list['hotSearchList'] != null ? _list['hotSearchList'] : [];
     if (arr.length == 0) return SizedBox();
     var tempList = arr.map<Widget>((item) {
-      return Container(
-        width: Util.sw(74),
-        height: Util.sw(20),
-        margin: EdgeInsets.only(right: Util.sw(10)),
-        decoration: BoxDecoration(
-            color: Util.hexColor(0xffffff80, alpha: 0.3),
-            borderRadius: BorderRadius.circular(10)),
-        child: Text(
-          item['title'],
-          textAlign: TextAlign.center,
+      return InkWell(
+              child: Container(
+          width: Util.sw(74),
+          height: Util.sw(20),
+          margin: EdgeInsets.only(right: Util.sw(10)),
+          decoration: BoxDecoration(
+              color: Util.hexColor(0xffffff80, alpha: 0.3),
+              borderRadius: BorderRadius.circular(10)),
+          child: Text(
+            item['title'],
+            textAlign: TextAlign.center,
+          ),
         ),
+        onTap: (){
+          Navigator.pushNamed(context, '/search',arguments: {
+              'placeholder':item['url']
+            });
+        },
       );
     }).toList();
     return Expanded(

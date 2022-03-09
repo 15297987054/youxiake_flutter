@@ -9,7 +9,7 @@ class TransitionPage extends StatefulWidget {
 }
 
 class _TransitionPageState extends State<TransitionPage> {
-  int _countDown = 1;
+  int _countDown = 3;
   late Timer _timer;
   @override
   void initState() { 

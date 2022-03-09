@@ -12,4 +12,10 @@ class homeApi{
   static getCityList(params){
     return DioFn('get','/api/m/index/city',data:null,params:params);
   }
+  
+  /**获取商品列表 */
+  static getGoodsList(params){
+    var data =  DioFn('get','/api/m/index/flow/recommend',data:null,params:params);
+    return data;
+  }
 }

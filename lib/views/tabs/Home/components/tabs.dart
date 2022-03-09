@@ -15,23 +15,25 @@ class _TabsWidgetState extends State<TabsWidget> {
   String _title = '';
   Map _tabData = {}; // 各tab产品
   @override
+  void initState() { 
+    super.initState();
+        this._initData();
+  }
+  @override
   void didUpdateWidget(covariant TabsWidget oldWidget) {
     // TODO: implement didUpdateWidget
     super.didUpdateWidget(oldWidget);
-    if (widget.data['weekList'] != null) {
-      if (_title == '') {
-        setState(() {
+      this._initData();
+  }
+  void _initData(){
+    if (widget.data['weekList'] != null && widget.data['weekList'].length>0) {
+    setState(() {
           _title = widget.data['weekList'][0]['title'];
-        });
-      }
-      if (_tabData['productList'] == null) {
-        setState(() {
+          type=widget.data['tabList'][0]['type'];
           _tabData = widget.data['weekList'][0];
         });
-      }
     }
   }
-
   @override
   Widget build(BuildContext context) {
     return Container(
